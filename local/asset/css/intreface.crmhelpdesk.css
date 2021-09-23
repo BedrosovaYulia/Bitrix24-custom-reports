@@ -1,0 +1,77 @@
+.support-status-bar{
+    border: 1px solid #cdd0d3;
+    border-radius: 2px;
+    height: 8px;
+    min-width: 170px;
+    max-width: 350px;
+    background-color: #fff;
+}
+
+.support-status-bar.status-yellow{
+    background-color: #FAFF86;
+    border-color: #E6F201;
+}
+
+.support-status-bar.status-red{
+    background-color: #f54819;
+    border-color: #d13e16;
+}
+
+.support-status-bar.status-green{
+    background-color: #b0d63a;
+    border-color: #96b833;
+}
+.support-status-bar.status-green_s{
+    background-color: #838830;
+    border-color: #96b833;
+}
+
+.support-status-bar.status-grey{
+    background-color: #ccc;
+    border-color: #999;
+}
+
+.support-status-description{
+    color: #a5a9ab;
+    font-size: 11px;
+    padding: 5px 0 0 3px;
+    line-height: 14px !important;
+}
+
+input.has-error, textarea.has-error{
+    border-color: #FF0000;
+}
+
+.ticket-view-message{
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+}
+
+.ticket-view-message .author{
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.ticket-view-message .author > span{
+    text-decoration: underline;
+}
+
+.ticket-view-message.support-team{
+    margin-left: 40px;
+    background: #e2f5fc;
+}
+
+.ticket-view-message.client{
+    margin-right: 40px;
+    background: #FFF;
+}
+
+.crm_ticket_view_dialog form{
+    max-width: 600px;
+    max-height: 400px;
+    overflow: auto;
+}
