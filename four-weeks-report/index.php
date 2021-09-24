@@ -164,7 +164,7 @@ select
 				<option value="all" <?if(in_array('all', $_REQUEST['SUB_SOURCE'])) echo 'selected'?>>All</option>
 <?
 
-$sql = "select distinct UF_CRM_1505283753 from b_uts_crm_lead";
+$sql = "select distinct UF_CRM_1505283753 from b_uts_crm_lead ORDER BY UF_CRM_1505283753";
 $status_res = $DB->Query($sql);
 while($sub_status = $status_res->fetch())
 {
@@ -257,6 +257,10 @@ print "</pre>";*/
 print_r($DATERANGE);
 print "</pre>";*/
 
+/*$ar = CCrmStatus::GetStatusList('STATUS');
+print "<pre>";
+print_r($ar);
+print "</pre>";*/
 
 if($_REQUEST['LEAD_SOURCE'])
 	{
@@ -309,11 +313,16 @@ foreach ($ALL_RESPONSIBLE_HISTORY as $r){
 
 #подсоберем вспомогательный справочник ответсвенный -> дата вступления
 $RESP_DATE=array();
-foreach ($RESPONSIBLE_HISTORY as $r){
+foreach ($ALL_RESPONSIBLE_HISTORY as $r){
+	//print_r($r);
 	if (array_key_exists($r['UF_RESPONSIBLE_ID'],$URERS)){
-		$RESP_DATE[$r['UF_RESPONSIBLE_ID']]=$r['UF_DATETIME'];
+		$RESP_DATE[$r['UF_ENTITY_ID']][$r['UF_RESPONSIBLE_ID']]=$r['UF_DATETIME'];
 	}
 }
+
+/*print "<pre>";
+print_r($RESP_DATE);
+print "</pre>";*/
 
 /*print "<pre>";
 print_r($All_RESP_FOR_LEAD);
@@ -391,30 +400,35 @@ foreach ($leadsID as $l_id){
 		$k=0;
 		$prev_resp=0;
 
-		//print "<pre>";
-		//print_r($All_RESP_FOR_LEAD[$l_id]);
-		//print "</pre>";
+		/*print "<pre>";
+		print_r($All_RESP_FOR_LEAD[$l_id]);
+		print "</pre>";*/
 
 		#оно уже отсортировано по дате благодаря тому что делая запрос к таблице респ хистори мы вписали там ордер
 		foreach($All_RESP_FOR_LEAD[$l_id] as $resp_id){
 			//если это самый первый ответсвенный
 			if ($k==0){
 				$prev_resp=$resp_id;#то неичего не делаем а вписываем его в предыдущего
+				//print $resp_id;
+				//print $resp_id." ".$RESP_DATE[$l_id][$resp_id]."<br/>";
 			}
 			else{
 				#а если это уже не первый ответсвенный, то у него есть предыдущий
 				#ну и теперь для каждого предыдущего ответсвенного - статус это последний статус до даты вступления нынешнего отственного
 				if (array_key_exists($prev_resp,$URERS)){
-					//print $prev_resp." ".$RESP_DATE[$resp_id]."<br/>";
-					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$resp_id]."' and OWNER_ID=".$l_id." ORDER BY CREATED_TIME";
+					//print $resp_id." ".$RESP_DATE[$l_id][$resp_id]."<br/>";
+					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." ORDER BY CREATED_TIME";
 					//print $sql."<br/>";
 					$leads_res = $DB->Query($sql);
 					while($ly = $leads_res->fetch())
 					{ $leadStatuses[$l_id][$prev_resp]=$ly['STATUS_ID']; 
 
-					 //print $l_id." ".$prev_resp." ".$ly['STATUS_ID']."<br/>";
+
 					}
+					//print $l_id." ".$prev_resp." ".$leadStatuses[$l_id][$prev_resp]."<br/>";
+
 				}
+				$prev_resp=$resp_id;
 			}
 			$k=$k+1;
 		}
@@ -450,6 +464,8 @@ print "</pre>";
 print "<pre>";
 print_r(array_unique($xx));
 print "</pre>";*/
+
+
 
 $STATUS_CONVERTER = array();
 $STATUS_CONVERTER["NEW"] = "NOT_CONTACTED";
