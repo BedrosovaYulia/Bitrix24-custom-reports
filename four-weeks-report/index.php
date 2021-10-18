@@ -369,7 +369,7 @@ while($ly = $leads_res->fetch())
 
 #справочник того, водил ли ответсвенный данный лид в статус ассемент
 $ASSESSMENT=array();
-$sql = "SELECT ID, OWNER_ID, STATUS_ID, RESPONSIBLE_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."' and OWNER_ID IN (".$lead_id_str.") and STATUS_ID=18 ORDER BY CREATED_TIME";
+$sql = "SELECT ID, OWNER_ID, STATUS_ID, RESPONSIBLE_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."' and OWNER_ID IN (".$lead_id_str.") and STATUS_ID in (18,19,35) ORDER BY CREATED_TIME";
 //print $sql."<br/>";
 $leads_res = $DB->Query($sql);
 while($ly = $leads_res->fetch())
@@ -377,9 +377,27 @@ while($ly = $leads_res->fetch())
 
 		$ASSESSMENT[$ly['OWNER_ID']][$ly['RESPONSIBLE_ID']]=$ly['STATUS_ID'];
 }
-/*print "<pre>";
-print_r($ASSESSMENT);
-print "</pre>";*/
+#справочник того, водил ли ответсвенный данный лид в статус докаут
+$DOCOUT=array();
+$sql = "SELECT ID, OWNER_ID, STATUS_ID, RESPONSIBLE_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."' and OWNER_ID IN (".$lead_id_str.") and STATUS_ID in (19,35) ORDER BY CREATED_TIME";
+//print $sql."<br/>";
+$leads_res = $DB->Query($sql);
+while($ly = $leads_res->fetch())
+	{
+
+		$DOCOUT[$ly['OWNER_ID']][$ly['RESPONSIBLE_ID']]=$ly['STATUS_ID'];
+}
+
+$DOCBACK=array();
+$sql = "SELECT ID, OWNER_ID, STATUS_ID, RESPONSIBLE_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."' and OWNER_ID IN (".$lead_id_str.") and STATUS_ID=35 ORDER BY CREATED_TIME";
+//print $sql."<br/>";
+$leads_res = $DB->Query($sql);
+while($ly = $leads_res->fetch())
+	{
+
+		$DOCBACK[$ly['OWNER_ID']][$ly['RESPONSIBLE_ID']]=$ly['STATUS_ID'];
+}
+
 
 #справочник по сделке и ее sub source
 $sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead";
@@ -442,14 +460,29 @@ foreach ($leadsID as $l_id){
 					//print $l_id." ".$prev_resp." ".$leadStatuses[$l_id][$prev_resp]."<br/>";
 
 					//и проверяем водил ли данный ответсвенный данный лид в статус ассемент
-					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." and STATUS_ID=18 ORDER BY CREATED_TIME";
+					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." and STATUS_ID in (18,19,35) ORDER BY CREATED_TIME";
 					//print $sql."<br/>";
 					$leads_res = $DB->Query($sql);
 					while($ly = $leads_res->fetch())
 					{ $ASSESSMENT[$l_id][$prev_resp]=$ly['STATUS_ID']; 
-
-
 					}
+
+					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." and STATUS_ID in (19,35) ORDER BY CREATED_TIME";
+					//print $sql."<br/>";
+					$leads_res = $DB->Query($sql);
+					while($ly = $leads_res->fetch())
+					{ $DOCOUT[$l_id][$prev_resp]=$ly['STATUS_ID']; 
+					}
+
+					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." and STATUS_ID=35 ORDER BY CREATED_TIME";
+					//print $sql."<br/>";
+					$leads_res = $DB->Query($sql);
+					while($ly = $leads_res->fetch())
+					{ $DOCBACK[$l_id][$prev_resp]=$ly['STATUS_ID']; 
+					}
+
+
+
 
 				}
 				$prev_resp=$resp_id;
@@ -579,7 +612,7 @@ $n = 0;
 					{
 						if(isset($STATUS_CONVERTER["$kl"]))
 						{
-							if ($kl!='36'  and $kl!='18'){
+							if ($kl!='36'  and $kl!='18' and $kl!='19' and $kl!='35'){
 								$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]=$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]+count($lbs);
 								$FULL_RESULT[$n]['Elements'][$STATUS_CONVERTER["$kl"]][]=$lbs;
 							}
@@ -595,6 +628,18 @@ $n = 0;
 
 									$FULL_RESULT[$n]['ASSESSMENT']=$FULL_RESULT[$n]['ASSESSMENT']+1;
 									$FULL_RESULT[$n]['Elements']['ASSESSMENT'][]=array($ass_lead_id);
+								}
+
+								if(isset($DOCOUT[$ass_lead_id][$k])){
+
+									$FULL_RESULT[$n]['DOCS_OUT']=$FULL_RESULT[$n]['DOCS_OUT']+1;
+									$FULL_RESULT[$n]['Elements']['DOCS_OUT'][]=array($ass_lead_id);
+								}
+
+								if(isset($DOCBACK[$ass_lead_id][$k])){
+
+									$FULL_RESULT[$n]['DOCS_BACK']=$FULL_RESULT[$n]['DOCS_BACK']+1;
+									$FULL_RESULT[$n]['Elements']['DOCS_BACK'][]=array($ass_lead_id);
 								}
 							}
 
