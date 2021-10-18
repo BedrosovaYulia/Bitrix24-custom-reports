@@ -367,6 +367,20 @@ while($ly = $leads_res->fetch())
 	}
 #для тех лидов, у которых за данный период был только 1 ответсвенный - справочник уже собрался нормально, для тех у кого сменился ответсвенный - нужно дособрать
 
+#справочник того, водил ли ответсвенный данный лид в статус ассемент
+$ASSESSMENT=array();
+$sql = "SELECT ID, OWNER_ID, STATUS_ID, RESPONSIBLE_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."' and OWNER_ID IN (".$lead_id_str.") and STATUS_ID=18 ORDER BY CREATED_TIME";
+//print $sql."<br/>";
+$leads_res = $DB->Query($sql);
+while($ly = $leads_res->fetch())
+	{
+
+		$ASSESSMENT[$ly['OWNER_ID']][$ly['RESPONSIBLE_ID']]=$ly['STATUS_ID'];
+}
+/*print "<pre>";
+print_r($ASSESSMENT);
+print "</pre>";*/
+
 #справочник по сделке и ее sub source
 $sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead";
 $lid_sub_status = array();
@@ -426,6 +440,16 @@ foreach ($leadsID as $l_id){
 
 					}
 					//print $l_id." ".$prev_resp." ".$leadStatuses[$l_id][$prev_resp]."<br/>";
+
+					//и проверяем водил ли данный ответсвенный данный лид в статус ассемент
+					$sql = "SELECT ID, OWNER_ID, STATUS_ID, CREATED_TIME FROM b_crm_lead_status_history WHERE CREATED_TIME <= '".$RESP_DATE[$l_id][$resp_id]."' and OWNER_ID=".$l_id." and STATUS_ID=18 ORDER BY CREATED_TIME";
+					//print $sql."<br/>";
+					$leads_res = $DB->Query($sql);
+					while($ly = $leads_res->fetch())
+					{ $ASSESSMENT[$l_id][$prev_resp]=$ly['STATUS_ID']; 
+
+
+					}
 
 				}
 				$prev_resp=$resp_id;
@@ -499,6 +523,7 @@ $STATUS_CONVERTER["43"] = "FAILED";
 $STATUS_CONVERTER["44"] = "FAILED";
 $STATUS_CONVERTER["45"] = "FAILED";
 
+$NOT_CONTACTED=["NEW","38","29","26"];
 
 /*
 $URERS = array();
@@ -554,18 +579,25 @@ $n = 0;
 					{
 						if(isset($STATUS_CONVERTER["$kl"]))
 						{
-							//$lbs_val=count($lbs);
-							//$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]=count($lbs);
-							$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]=$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]+count($lbs);
-							$FULL_RESULT[$n]['Elements'][$STATUS_CONVERTER["$kl"]][]=$lbs;
-							/*print "<pre>";
-							print_r($STATUS_CONVERTER["$kl"]);
-							print "<br/>";
-							print_r($lbs);
-							print "</pre>";
-							print "<br/>";
-							print_r($FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]);
-							print "</pre>";*/
+							if ($kl!='36'  and $kl!='18'){
+								$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]=$FULL_RESULT[$n][$STATUS_CONVERTER["$kl"]]+count($lbs);
+								$FULL_RESULT[$n]['Elements'][$STATUS_CONVERTER["$kl"]][]=$lbs;
+							}
+							if (!in_array($kl,$NOT_CONTACTED)){
+								//print $kl;
+								$FULL_RESULT[$n]['IN_CONTACT']=$FULL_RESULT[$n]['IN_CONTACT']+count($lbs);
+								$FULL_RESULT[$n]['Elements']['IN_CONTACT'][]=$lbs;
+							}
+
+							foreach ($lbs as $ass_lead_id){
+
+								if(isset($ASSESSMENT[$ass_lead_id][$k])){
+
+									$FULL_RESULT[$n]['ASSESSMENT']=$FULL_RESULT[$n]['ASSESSMENT']+1;
+									$FULL_RESULT[$n]['Elements']['ASSESSMENT'][]=array($ass_lead_id);
+								}
+							}
+
 						}
 					}
 
