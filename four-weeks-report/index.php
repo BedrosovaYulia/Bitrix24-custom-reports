@@ -248,8 +248,18 @@ while($ob = $USRS->GetNextElement()){
 		break;
 	}
 
+$dend = strtotime($DATERANGE['enddate']->format('Y-m-d H:i:s')); // текущее время (метка времени)
+$dstart = strtotime($DATERANGE['startdate']->format('Y-m-d H:i:s')); // какая-то дата в строке (1 января 2017 года)
+$datediff = $dend - $dstart; // получим разность дат (в секундах)
 
-
+if (floor($datediff / (60 * 60 * 24))>30){
+	print "Error: too long period!";
+	die();
+}
+if (floor($datediff / (60 * 60 * 24))<0){
+	print "Error: the end date of the period must be greater than the start date of the period!";
+	die();
+}
 
 //Обновление вспомогательной таблицы*************************************************************************************************
 $clearsql="delete from ybws_status_history WHERE DATE(UF_DATETIME) BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
