@@ -315,6 +315,8 @@ if($_REQUEST['LEAD_SOURCE'])
 		}
 	}
 
+//print "BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
+
 //Найдем лиды, которые были назначены на данных пользователей за выбранный период
 $arResult=array();
 foreach ($URERS as $user=>$user_name){
@@ -362,20 +364,34 @@ foreach ($URERS as $user=>$user_name){
 
 	//фильтр по подисточнику****************************************************
 
-	/*$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead";
-	$lid_sub_status = array();
-	$status_res = $DB->Query($sql);
-	while($status_row = $status_res->fetch())
+	$allocated_str="";
+	foreach($allocated as $key=>$all_lead_id) $allocated_str=$allocated_str.$all_lead_id.",";
+	$allocated_str=mb_substr($allocated_str,0, -1);
+
+	if($_REQUEST['SUB_SOURCE'][0]!=all && count($allocated)>0)
 	{
-		$lid_sub_status[$status_row['UF_CRM_1505283753']][]=$status_row['VALUE_ID'];
+
+		$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead WHERE VALUE_ID IN (".$allocated_str.") and UF_CRM_1505283753='".$_REQUEST['SUB_SOURCE'][0]."'";
+		//print $sql."<br/>";
+		$filteredLeadsID=array();
+		$filteredLeadsRes = $DB->Query($sql);
+		while($filteredLead = $filteredLeadsRes->fetch())
+			{
+				$filteredLeadsID[]=$filteredLead['VALUE_ID'];
+			}
+
+		/*print "<br/>Allocated:<br/>".count($allocated)."<br/>";
+		print_r($allocated);
+
+		print "<br/>Filtered:<br/>".count($filteredLeadsID)."<br/>";
+		print_r($filteredLeadsID);*/
+
+		$allocated=$filteredLeadsID;
+
+		/*print "<br/>Allocated2:<br/>".count($allocated)."<br/>";
+		print_r($allocated);*/
+
 	}
-
-
-	
-	if($_REQUEST['SUB_SOURCE'][0]!=all)
-	{
-	$leadsID=array_intersect($leadsID, $lid_sub_status[$_REQUEST['SUB_SOURCE'][0]]);
-	}*/
 
 
 	//конец фильтра по подисточнику**********************************************
@@ -432,10 +448,20 @@ foreach ($URERS as $user=>$user_name){
 		foreach($leadLastStatus as $leadID=>$leadLS){
 
 			if (in_array($leadLS, $failedStatuses) && !in_array($leadID,$failed)) $failed[] = $leadID;
-			if (in_array($leadLS, $notContactedStatuses) && !in_array($leadID,$notContacted)) $notContacted[] = $leadID;
 			if (in_array($leadLS, $inContactStatuses) && !in_array($leadID,$inContact)) $inContact[] = $leadID;
 			if (in_array($leadLS, $convertedStatuses) && !in_array($leadID,$converted)) $converted[] = $leadID;
-
+			if (in_array($leadLS, $notContactedStatuses) && !in_array($leadID,$notContacted)) $notContacted[] = $leadID;
+		}
+		//если остался лид, который не попал никуда - он тоже нот контактед
+		foreach ($allocated as $leadID){
+			if (!in_array($leadLS, $failed) 
+				&& !in_array($leadID,$inContact) 
+				&& !in_array($leadID,$converted) 
+				&& !in_array($leadID,$notContacted)
+				&& !in_array($leadID,$assement)
+				&& !in_array($leadID,$dockout)
+				&& !in_array($leadID,$dockback)
+				) $notContacted[] = $leadID;
 		}
 	$arResult[$user]['Failed']=$failed;
 	$arResult[$user]['NotContacted']=$notContacted;
