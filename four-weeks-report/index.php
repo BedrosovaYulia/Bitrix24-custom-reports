@@ -299,7 +299,8 @@ print "</pre>";*/
 
 
 //Источники лидов
-/*if($_REQUEST['LEAD_SOURCE'])
+$PRODUCT_FILTER="";
+if($_REQUEST['LEAD_SOURCE'])
 	{
 		if(!in_array('all', $_REQUEST['LEAD_SOURCE']))
 		{
@@ -314,28 +315,6 @@ print "</pre>";*/
 		}
 	}
 
-
-#2) Справочник источников лидов
-$LEADS_SOURCE=array();
-
-$sql = "SELECT ID, STATUS_ID, SOURCE_ID, STATUS_SEMANTIC_ID FROM b_crm_lead";
-//print $sql;
-$leadsID=array();
-$leads_res = $DB->Query($sql);
-while($lead = $leads_res->fetch())
-	{
-		$leadsID[$lead['ID']]=$lead['ID']; //похоже это массив ИД лидов уже профильтрованных источником
-		$LEADS_SOURCE[$lead['ID']]=$lead['SOURCE_ID'];
-	}
-
-
-if($_REQUEST['SUB_SOURCE'][0]!=all)
-{
-$leadsID=array_intersect($leadsID, $lid_sub_status[$_REQUEST['SUB_SOURCE'][0]]);
-}
-*/
-
-
 //Найдем лиды, которые были назначены на данных пользователей за выбранный период
 $arResult=array();
 foreach ($URERS as $user=>$user_name){
@@ -347,10 +326,39 @@ foreach ($URERS as $user=>$user_name){
 	{
 
 			if (!in_array($resp['UF_ENTITY_ID'], $allocated)) {
-				//Здесь отфильтровать назначенные лиды по источнику лида
 				$allocated[] = $resp['UF_ENTITY_ID'];
 			}
 	}
+
+	//фильтруем горячие/холодные лиды*************************
+	$allocated_str="";
+	foreach($allocated as $key=>$all_lead_id) $allocated_str=$allocated_str.$all_lead_id.",";
+	$allocated_str=mb_substr($allocated_str,0, -1);
+
+	if($PRODUCT_FILTER)
+	{
+		$sql = "SELECT ID, STATUS_ID, SOURCE_ID, STATUS_SEMANTIC_ID FROM b_crm_lead WHERE ID IN (".$allocated_str.")".$PRODUCT_FILTER;
+		//print $sql;
+		$filteredLeadsID=array();
+		$filteredLeadsRes = $DB->Query($sql);
+		while($filteredLead = $filteredLeadsRes->fetch())
+			{
+				$filteredLeadsID[]=$filteredLead['ID'];
+			}
+
+		/*print "<br/>Allocated:<br/>".count($allocated)."<br/>";
+		print_r($allocated);
+
+		print "<br/>Filtered:<br/>".count($filteredLeadsID)."<br/>";
+		print_r($filteredLeadsID);*/
+
+		$allocated=$filteredLeadsID;
+
+		/*print "<br/>Allocated2:<br/>".count($allocated)."<br/>";
+		print_r($allocated);*/
+
+	}
+	//конец фильтра по горячим/холодным лидам**************************************
 
 	$arResult[$user]['Allocated']=$allocated;
 	$arResult[$user]['Name']=$user_name;
