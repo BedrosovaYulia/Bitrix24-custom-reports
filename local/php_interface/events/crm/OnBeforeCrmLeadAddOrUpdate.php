@@ -58,7 +58,8 @@ $handlerPhone = function (&$fields){
 
                 $fields['FM']['PHONE'][$key] = [
                     'VALUE' => \sprintf('+27%s%s%s', $matches[2], $matches[5], empty($prefix) ?'' :'#' . $prefix),
-                    'VALUE_TYPE' => $isMobile ?'MOBILE' :'WORK',
+					'VALUE_TYPE' => $isMobile ?'MOBILE' :'WORK',
+					//'VALUE_TYPE'=>$value['VALUE_TYPE'],
                 ];
             }
 
@@ -101,8 +102,6 @@ $handlerName = function(&$fields){
     if($fields['FULL_NAME']){
         $fields['FULL_NAME'] = \join(" ", \array_filter([$fields['NAME'], $fields['SECOND_NAME'], $fields['LAST_NAME']]));
     }
-
-
 };
 
 EventManager::getInstance()->addEventHandler('crm', 'OnBeforeCrmLeadAdd', $handlerName);
@@ -118,16 +117,20 @@ $eventManager->addEventHandler('crm','OnAfterCrmLeadAdd',function(&$arFields)
 	define("LOG_FILENAME", $_SERVER["DOCUMENT_ROOT"]."/reportlog.txt");
 	AddMessage2Log($arFields, "after_crm_lead_add");
 	GsResponsibleHistory::Add('LEAD', $arFields['ID'], $arFields['ASSIGNED_BY_ID']);
+	GsStatusHistory::Add('LEAD', $arFields['ID'], $arFields['STATUS_ID'], $arFields['ASSIGNED_BY_ID']);
 });
 $eventManager->addEventHandler('crm','OnBeforeCrmLeadUpdate',function(&$arFields) 
 {
-	AddMessage2Log($arFields, "before_crm_lead_update");
+	define("LOG_FILENAME", $_SERVER["DOCUMENT_ROOT"]."/reportlog.txt");
+	//AddMessage2Log($arFields, "before_crm_lead_update");
 	GsFieldsSync::CheckLeadUpdate($arFields);
 });
 $eventManager->addEventHandler('crm','OnAfterCrmLeadUpdate',function(&$arFields) 
 {
-	AddMessage2Log($arFields, "after_crm_lead_update");
+	define("LOG_FILENAME", $_SERVER["DOCUMENT_ROOT"]."/reportlog.txt");
+	//AddMessage2Log($arFields, "after_crm_lead_update");
 	$fields = GsFieldsSync::GetLeadUpdateFields();
+	//AddMessage2Log($fields, "after_crm_lead_update");
 	if($fields['ASSIGNED_BY_ID'])
 	{
 		if(intval($arFields['ASSIGNED_BY_ID'])>0 && intval($arFields['ID'])>0) 
@@ -135,5 +138,9 @@ $eventManager->addEventHandler('crm','OnAfterCrmLeadUpdate',function(&$arFields)
 			GsResponsibleHistory::Add('LEAD', $arFields['ID'], $arFields['ASSIGNED_BY_ID']);
 		}
 	}
-
+	if($fields['STATUS_ID'])
+	{
+		$YBWS_LEAD_RESP_BEFORE = CCrmLead::GetByID($arFields['ID'])['ASSIGNED_BY_ID'];
+		GsStatusHistory::Add('LEAD', $arFields['ID'], $arFields['STATUS_ID'], $YBWS_LEAD_RESP_BEFORE);
+	}
 });

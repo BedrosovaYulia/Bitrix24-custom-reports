@@ -345,7 +345,7 @@ class Crmbot extends Base
 
 	public static function getIframeUrl()
 	{
-		$controllerUrl = 'https://bitrix.cyberfinance.co.za/local/php_interface/functions/crmbot_iframe.php';
+		$controllerUrl = 'https://cytron-cyberfinance.com/local/php_interface/functions/crmbot_iframe.php';
 		return $controllerUrl;
 	}
 }

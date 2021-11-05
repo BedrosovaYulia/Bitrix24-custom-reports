@@ -262,7 +262,7 @@ if (floor($datediff / (60 * 60 * 24))<0){
 }
 
 //Обновление вспомогательной таблицы*************************************************************************************************
-$clearsql="delete from ybws_status_history WHERE DATE(UF_DATETIME) BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
+/*$clearsql="delete from ybws_status_history WHERE DATE(UF_DATETIME) BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
 $DB->Query($clearsql);
 
 $status_rows = array();
@@ -289,7 +289,7 @@ foreach ($status_rows as $ly){
 		}
 
 
-}
+}*/
 //конец обновления вспомогательной таблицы**********************************************************************************************************
 
 /*$ar = CCrmStatus::GetStatusList('STATUS');
@@ -359,6 +359,26 @@ foreach ($URERS as $user=>$user_name){
 
 	}
 	//конец фильтра по горячим/холодным лидам**************************************
+
+	//фильтр по подисточнику****************************************************
+
+	/*$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead";
+	$lid_sub_status = array();
+	$status_res = $DB->Query($sql);
+	while($status_row = $status_res->fetch())
+	{
+		$lid_sub_status[$status_row['UF_CRM_1505283753']][]=$status_row['VALUE_ID'];
+	}
+
+
+	
+	if($_REQUEST['SUB_SOURCE'][0]!=all)
+	{
+	$leadsID=array_intersect($leadsID, $lid_sub_status[$_REQUEST['SUB_SOURCE'][0]]);
+	}*/
+
+
+	//конец фильтра по подисточнику**********************************************
 
 	$arResult[$user]['Allocated']=$allocated;
 	$arResult[$user]['Name']=$user_name;

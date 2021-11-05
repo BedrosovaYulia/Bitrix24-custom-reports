@@ -1,31 +1,28 @@
 <?
-class GsResponsibleHistory
+class GsStatusHistory
 {
-	const HL_ID = 3;
-	const HL_TABLE_NAME = 'ybws_responsible_history';
+	const HL_ID = 4;
+	const HL_TABLE_NAME = 'ybws_status_history';
 	const ENTITY_TYPES = array(
 		"LEAD"=>1,
 		"DEAL"=>2,
 		"CONTACT"=>3,
 		"COMPANY"=>4
 	);
-	const UNKNOWN_USER_ID = 35;
+	const UNKNOWN_USER_ID = 0;
 
-	public static function Add($ENTITY_TYPE, $ENTITY_ID, $RESPONSIBLE_ID)
+	public static function Add($ENTITY_TYPE, $ENTITY_ID, $STATUS_ID, $RESPONSIBLE_ID=0)
 	{
-
-		//print_r(array($ENTITY_TYPE, $ENTITY_ID, $RESPONSIBLE_ID));
-		//echo(self::ENTITY_TYPES[$ENTITY_TYPE]);
 		$now = new DateTime();
 		$hl = self::GetHL();
 		$hl::add(array(
 			'UF_DATETIME'=>$now->format('d/m/Y H:i:00'),
 			'UF_ENTITY_TYPE'=>self::ENTITY_TYPES[$ENTITY_TYPE],
 			'UF_ENTITY_ID'=>intval($ENTITY_ID), 
-			'UF_RESPONSIBLE_ID'=>intval($RESPONSIBLE_ID),
+			'UF_STATUS_ID'=>$STATUS_ID,
 			'UF_SOURCE'=>'onupdate',
+			'UF_RESPONSIBLE_ID'=>intval($RESPONSIBLE_ID)
 		));
-		//print_r($result);
 	}
 
 	public static function GetRows($filter=array())
@@ -39,7 +36,7 @@ class GsResponsibleHistory
 		));
 		while($row = $rows->fetch())
 		{
-			$result[array_search($row['UF_ENTITY_TYPE'], self::ENTITY_TYPES)][$row['UF_ENTITY_ID']][] = array('RESPONSIBLE'=>$row['UF_RESPONSIBLE_ID'], 'DATETIME'=>$row['UF_DATETIME']);
+			$result[array_search($row['UF_ENTITY_TYPE'], self::ENTITY_TYPES)][$row['UF_ENTITY_ID']][] = array('STATUS'=>$row['UF_STATUS_ID'], 'RESPONSIBLE'=>$row['UF_RESPONSIBLE_ID'], 'DATETIME'=>$row['UF_DATETIME']);
 		}
 		return $result;
 	}
@@ -51,7 +48,7 @@ class GsResponsibleHistory
 		return $result[$ENTITY_TYPE][$ENTITY_ID];
 	}
 
-	public static function GetResponsibleOnDate($ENTITY_TYPE, $ENTITY_ID, $REQUEST_TIME=false)
+	public static function GetStatusOnDate($ENTITY_TYPE, $ENTITY_ID, $REQUEST_TIME=false)
 	{
 		if(!$REQUEST_TIME) $REQUEST_TIME = new DateTime();
 		$result = false;
@@ -59,33 +56,33 @@ class GsResponsibleHistory
 		$rows = self::GetEntityRows($ENTITY_TYPE, $ENTITY_ID);
 		foreach($rows as $row)
 		{
-			if(!$result) $result = $row['RESPONSIBLE'];
+			if(!$result) $result = $row;
 			$ELEMENT_TIME = DateTime::createFromFormat("Y-m-d H:i:s", $row['DATETIME']);
 			if($REQUEST_TIME>=$ELEMENT_TIME)
 			{
-				$result = $row['RESPONSIBLE'];
+				$result = $row;
 			}
 		}
 		return $result;
 	}
 
-	public static function FindResponsibleOnDateInRows($rows, $REQUEST_TIME=false)
+	public static function FindStatusOnDateInRows($rows, $REQUEST_TIME=false)
 	{
 		if(!$REQUEST_TIME) $REQUEST_TIME = new DateTime();
 		$result = false;
 		foreach($rows as $row)
 		{
-			if(!$result) $result = $row['RESPONSIBLE'];
+			if(!$result) $result = $row;
 			$ELEMENT_TIME = DateTime::createFromFormat("Y-m-d H:i:s", $row['DATETIME']);
 			if($REQUEST_TIME>=$ELEMENT_TIME)
 			{
-				$result = $row['RESPONSIBLE'];
+				$result = $row;
 			}
 		}
 		return $result;
 	}
 
-	public static function RecreateHistoryByCrmEvents($ENTITIES_PROCEED_LIMIT=0, $ENTITIES_PROCEED_OFFSET=0, $CLEAR_TABLE=true)
+	/*public static function RecreateHistoryByCrmEvents($ENTITIES_PROCEED_LIMIT=0, $ENTITIES_PROCEED_OFFSET=0, $CLEAR_TABLE=true)
 	{
 
 		global $DB;
@@ -277,7 +274,7 @@ class GsResponsibleHistory
 		$logger->Info("Всего пробежали ".$ENTITIES_COUNTER. " и записали ".$ENTITIES_PROCEED);
 		return $ENTITIES_PROCEED;
 		//return $logger->errors;
-	}
+	}*/
 
 	private static function GetHL()
 	{

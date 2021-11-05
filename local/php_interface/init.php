@@ -82,10 +82,9 @@ if (!(isset($_SESSION['NO_INIT']) && $_SESSION['NO_INIT'] == 'Y'))
     if (file_exists($_SERVER["DOCUMENT_ROOT"]."/local/php_interface/functions/crmbot.php"))
         require_once($_SERVER["DOCUMENT_ROOT"]."/local/php_interface/functions/crmbot.php");
 
-
-
 	if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsLogger.php")) require_once($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsLogger.php");
 	if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsResponsibleHistory.php")) require_once($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsResponsibleHistory.php");
+	if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsStatusHistory.php")) require_once($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsStatusHistory.php");
 	if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsFieldsSync.php")) require_once($_SERVER["DOCUMENT_ROOT"] . "/local/classes/GsFieldsSync.php");
 
 
@@ -135,7 +134,3 @@ function OnBeforeUserUpdateHandler(&$arFields)
 $eventManager->addEventHandler("socialnetwork", "OnFillSocNetMenu", function (&$fields, $arParams) {
     $fields['CanView']['blog'] = false;
 });
-
-
-
-
