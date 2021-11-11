@@ -297,6 +297,41 @@ print "<pre>";
 print_r($ar);
 print "</pre>";*/
 
+/*Array
+(
+    [NEW] => Not Contacted
+    [33] => Salary less than 6 000
+    [34] => Salary more than 6 000
+    [38] => E-mail / sms / Wazzup to get in contact
+    [29] => Callback Language
+    [26] => Re-pitch
+    [36] => IN CONTACT pitching
+    [18] => Assessment
+    [19] => Docs Out
+    [35] => Docs Back
+    [CONVERTED] => Converted
+    [JUNK] => Junk Lead
+    [41] => No Response
+    [44] => Opt-Out
+    [43] => Competitor Fishing
+    [7] => Error number
+    [1] => Not over-indebted
+    [2] => DC too low
+    [3] => Unemployed
+    [4] => Under DR active
+    [5] => Under DR non-active
+    [6] => Salary insufficient
+    [10] => Insists on having a loan
+    [42] => Wants Personal Loan
+    [15] => Not interested
+    [46] => Not interested but needs help
+    [45] => Needs more time
+    [20] => Existing client DR
+    [21] => Existing client VDR
+    [22] => Existing client
+    [40] => Duplicate
+)*/
+
 
 //Источники лидов
 $PRODUCT_FILTER="";
@@ -337,7 +372,7 @@ foreach ($URERS as $user=>$user_name){
 	foreach($allocated as $key=>$all_lead_id) $allocated_str=$allocated_str.$all_lead_id.",";
 	$allocated_str=mb_substr($allocated_str,0, -1);
 
-	if($PRODUCT_FILTER)
+	if($PRODUCT_FILTER && count($allocated)>0)
 	{
 		$sql = "SELECT ID, STATUS_ID, SOURCE_ID, STATUS_SEMANTIC_ID FROM b_crm_lead WHERE ID IN (".$allocated_str.")".$PRODUCT_FILTER;
 		//print $sql;
@@ -404,6 +439,8 @@ foreach ($URERS as $user=>$user_name){
 	$dockout=array();
 	$dockback=array();
 
+
+	$inContactStatuses=[36,18,19,35,"JUNK",44,1,2,3,4,5,6,10,42,15,46,45];
 	$assesmentStatuses=[18,19,35];
 	$dockoutStatuses=[19,35];
 	$dockbackStatuses=[35];
@@ -413,10 +450,13 @@ foreach ($URERS as $user=>$user_name){
 	$inContact=array();
 	$converted=array();
 
-	$failedStatuses=["JUNK",1,2,3,4,5,6,7,10,15,20,21,22,40,41,42,43,44,45];
+
+	$failedStatuses=["JUNK",1,2,3,4,5,6,7,10,15,41,42,43,44,45,46];
 	$notContactedStatuses=["NEW",38,29,26, 33, 34];
-	$inContactStatuses=[36];
 	$convertedStatuses=["CONVERTED"];
+
+	$duplicatesStatuses=[20,21,22,40];
+	$duplicated=array();
 
 	if (count($allocated)>0){
 		$allocated_str="";
@@ -432,14 +472,19 @@ foreach ($URERS as $user=>$user_name){
 			{
 				$leadLastStatus[$ly['UF_ENTITY_ID']]=$ly['UF_STATUS_ID'];
 
+				if (in_array($ly['UF_STATUS_ID'], $inContactStatuses) && !in_array($ly['UF_ENTITY_ID'],$inContact)) $inContact[] = $ly['UF_ENTITY_ID'];
 				if (in_array($ly['UF_STATUS_ID'], $assesmentStatuses) && !in_array($ly['UF_ENTITY_ID'],$assement)) $assement[] = $ly['UF_ENTITY_ID'];
 				if (in_array($ly['UF_STATUS_ID'], $dockoutStatuses) && !in_array($ly['UF_ENTITY_ID'],$dockout)) $dockout[] = $ly['UF_ENTITY_ID'];
 				if (in_array($ly['UF_STATUS_ID'], $dockbackStatuses) && !in_array($ly['UF_ENTITY_ID'],$dockback)) $dockback[] = $ly['UF_ENTITY_ID'];
+
 			}
 
+		$arResult[$user]['InContact']=$inContact;
 		$arResult[$user]['Assesment']=$assement;
 		$arResult[$user]['Dockout']=$dockout;
 		$arResult[$user]['Dockback']=$dockback;
+
+
 
 		/*print "<pre>";
 		print_r($leadLastStatus);
@@ -448,9 +493,9 @@ foreach ($URERS as $user=>$user_name){
 		foreach($leadLastStatus as $leadID=>$leadLS){
 
 			if (in_array($leadLS, $failedStatuses) && !in_array($leadID,$failed)) $failed[] = $leadID;
-			if (in_array($leadLS, $inContactStatuses) && !in_array($leadID,$inContact)) $inContact[] = $leadID;
 			if (in_array($leadLS, $convertedStatuses) && !in_array($leadID,$converted)) $converted[] = $leadID;
 			if (in_array($leadLS, $notContactedStatuses) && !in_array($leadID,$notContacted)) $notContacted[] = $leadID;
+			if (in_array($leadLS, $duplicatesStatuses) && !in_array($leadID,$duplicated)) $duplicated[]=$leadID;
 		}
 		//если остался лид, который не попал никуда - он тоже нот контактед
 		foreach ($allocated as $leadID){
@@ -461,12 +506,13 @@ foreach ($URERS as $user=>$user_name){
 				&& !in_array($leadID,$assement)
 				&& !in_array($leadID,$dockout)
 				&& !in_array($leadID,$dockback)
+				&& !in_array($leadID,$duplicated)
 				) $notContacted[] = $leadID;
 		}
 	$arResult[$user]['Failed']=$failed;
 	$arResult[$user]['NotContacted']=$notContacted;
-	$arResult[$user]['InContact']=$inContact;
 	$arResult[$user]['Converted']=$converted;
+	$arResult[$user]['Duplicated']=$duplicated;
 	}
 }
 
