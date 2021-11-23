@@ -5,6 +5,7 @@ if($_REQUEST['AGENT']=="") $_REQUEST['AGENT']='UA';
 if($_REQUEST['DATE_RANGE']=="") $_REQUEST['DATE_RANGE']='day';
 if($_REQUEST['PRODUCT']=="") $_REQUEST['PRODUCT']='all';
 if($_REQUEST['LEAD_SOURCE']=="")$_REQUEST['LEAD_SOURCE'] = array(0=>"all");
+if($_REQUEST['ILEAD_SOURCE']=="")$_REQUEST['ILEAD_SOURCE'] = array(0=>"all");
 if($_REQUEST['SUB_SOURCE']=="")$_REQUEST['SUB_SOURCE'] = array(0=>"all");
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
@@ -154,6 +155,22 @@ select
 				<option value="all" <?if(in_array('all', $_REQUEST['LEAD_SOURCE'])) echo 'selected'?>>All</option>
 				<option value="Cold" <?if(in_array('Cold', $_REQUEST['LEAD_SOURCE'])) echo 'selected'?>>Cold leads</option>
 				<option value="Hot" <?if(in_array('Hot', $_REQUEST['LEAD_SOURCE'])) echo 'selected'?>>Hot leads</option>
+			</select>
+		</div>
+	</div>
+
+	<div class="col-auto">
+		<div class="field-caption">Individual Source: </div>
+		<div><select name="ILEAD_SOURCE[]" >
+				<option value="all" <?if(in_array('all', $_REQUEST['ILEAD_SOURCE'])) echo 'selected'?>>All</option>
+					<?
+					$sql = "select STATUS_ID, NAME from b_crm_status WHERE ENTITY_ID='SOURCE' ORDER BY NAME";
+					$ins_res = $DB->Query($sql);
+					while($ins = $ins_res->fetch())
+					{
+						?><option value="<?=$ins['STATUS_ID']?>" <?if(in_array($ins['STATUS_ID'], $_REQUEST['ILEAD_SOURCE'])) echo 'selected'?>><?=$ins['NAME']?></option><?
+					}
+					?>
 			</select>
 		</div>
 	</div>
@@ -349,6 +366,19 @@ if($_REQUEST['LEAD_SOURCE'])
 			}
 		}
 	}
+
+if($_REQUEST['ILEAD_SOURCE'])
+	{
+		if(!in_array('all', $_REQUEST['ILEAD_SOURCE']))
+		{
+
+		$PRODUCT_FILTER.=" AND (SOURCE_ID='".$_REQUEST['ILEAD_SOURCE'][0]."')";
+
+		}
+
+	}
+//print $PRODUCT_FILTER."<br/>";
+
 
 //print "BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
 
