@@ -562,11 +562,37 @@ function interest($arg_1, $arg_2)
 }
 
 ?>
+<?
+
+$sours_str="";
+
+
+$sql = "select STATUS_ID, NAME from b_crm_status WHERE ENTITY_ID='SOURCE' ORDER BY NAME";
+$ins_res = $DB->Query($sql);
+$ilead_sourses=array();
+while($ins = $ins_res->fetch())
+	{
+		$ilead_sourses[$ins['STATUS_ID']]=$ins['NAME'];
+	}
+
+
+
+	if (isset($_REQUEST['LEAD_SOURCE'][0]) && $_REQUEST['LEAD_SOURCE'][0]!='all'){
+				 $sours_str=$sours_str." Source: ".$_REQUEST['LEAD_SOURCE'][0];
+	}
+	if (isset($_REQUEST['ILEAD_SOURCE'][0]) && $_REQUEST['ILEAD_SOURCE'][0]!='all'){
+				 $sours_str=$sours_str." Individual Source: ".$ilead_sourses[$_REQUEST['ILEAD_SOURCE'][0]];
+	}
+	if (isset($_REQUEST['SUB_SOURCE'][0]) && $_REQUEST['SUB_SOURCE'][0]!='all'){
+		$sours_str=$sours_str." Sub Source: ".$_REQUEST['SUB_SOURCE'][0];
+	}
+
+?>
 
 
 	<h3 style="border-bottom: 1px solid #eef2f4; margin-bottom: 1rem; font-size: 1.1rem; margin-top: 2rem;">
-		STATS for period <?=$DATERANGE['startdate']->format('d/m/Y')?> - <?=$DATERANGE['enddate']->format('d/m/Y')?>, lead source: <?=$lead_source_header?></h3>
-	<table style="width:100%;">
+		STATS for period <?=$DATERANGE['startdate']->format('d/m/Y')?> - <?=$DATERANGE['enddate']->format('d/m/Y')?> <?=$sours_str?></h3>
+	<table style="width:1100px;">
 		<tr style="font-weight: bold; text-transform: uppercase;  border-bottom: 1px solid #eef2f4;  font-size: 0.8rem;  line-height: 2rem; color: #717a84;">
 			<td>Agent name</td>
 			<td>Allocated leads</td>
