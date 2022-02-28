@@ -269,7 +269,7 @@ $dend = strtotime($DATERANGE['enddate']->format('Y-m-d H:i:s')); // текуще
 $dstart = strtotime($DATERANGE['startdate']->format('Y-m-d H:i:s')); // какая-то дата в строке (1 января 2017 года)
 $datediff = $dend - $dstart; // получим разность дат (в секундах)
 
-if (floor($datediff / (60 * 60 * 24))>30){
+if (floor($datediff / (60 * 60 * 24))>3700){
 	print "Error: too long period!";
 	die();
 }
@@ -382,6 +382,7 @@ if($_REQUEST['ILEAD_SOURCE'])
 
 //print "BETWEEN '".$DATERANGE['startdate']->format('Y-m-d H:i:s')."' AND '".$DATERANGE['enddate']->format('Y-m-d H:i:s')."'";
 
+//print $DATERANGE['enddate']->format('Y-m-d H:i:s');
 //Найдем лиды, которые были назначены на данных пользователей за выбранный период
 $arResult=array();
 foreach ($URERS as $user=>$user_name){
@@ -576,22 +577,29 @@ while($ins = $ins_res->fetch())
 	}
 
 
+	$shown_all_leads=true;
 
 	if (isset($_REQUEST['LEAD_SOURCE'][0]) && $_REQUEST['LEAD_SOURCE'][0]!='all'){
-				 $sours_str=$sours_str." Source: ".$_REQUEST['LEAD_SOURCE'][0];
+		$sours_str=$sours_str." Source: ".$_REQUEST['LEAD_SOURCE'][0];
+		$shown_all_leads=false;
 	}
 	if (isset($_REQUEST['ILEAD_SOURCE'][0]) && $_REQUEST['ILEAD_SOURCE'][0]!='all'){
-				 $sours_str=$sours_str." Individual Source: ".$ilead_sourses[$_REQUEST['ILEAD_SOURCE'][0]];
+		$sours_str=$sours_str." Individual Source: ".$ilead_sourses[$_REQUEST['ILEAD_SOURCE'][0]];
+		$shown_all_leads=false;
 	}
 	if (isset($_REQUEST['SUB_SOURCE'][0]) && $_REQUEST['SUB_SOURCE'][0]!='all'){
 		$sours_str=$sours_str." Sub Source: ".$_REQUEST['SUB_SOURCE'][0];
+		$shown_all_leads=false;
+	}
+	if ($shown_all_leads){
+		$sours_str=$sours_str." all leads: ";
 	}
 
 ?>
 
 
 	<h3 style="border-bottom: 1px solid #eef2f4; margin-bottom: 1rem; font-size: 1.1rem; margin-top: 2rem;">
-		STATS for period <?=$DATERANGE['startdate']->format('d/m/Y')?> - <?=$DATERANGE['enddate']->format('d/m/Y')?> <?=$sours_str?></h3>
+		STATS for period <?=$DATERANGE['startdate']->format('d/m/Y H:i:s')?> - <?=$DATERANGE['enddate']->format('d/m/Y H:i:s')?> <?=$sours_str?></h3>
 	<table style="width:1100px;">
 		<tr style="font-weight: bold; text-transform: uppercase;  border-bottom: 1px solid #eef2f4;  font-size: 0.8rem;  line-height: 2rem; color: #717a84;">
 			<td>Agent name</td>
