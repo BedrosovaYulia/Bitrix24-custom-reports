@@ -30,7 +30,7 @@ Bitrix\Main\UI\Extension::load('ui.bootstrap4');
 <style>
 select
 {
-	width: 10rem;
+	width: 8rem;
 	border-color: #e4e4e4;
 	padding: 0.6rem;
 }
@@ -185,6 +185,33 @@ select
 					while($sub_status = $status_res->fetch())
 					{
 						?><option value="<?=$sub_status['UF_CRM_1505283753']?>" <?if(in_array($sub_status['UF_CRM_1505283753'], $_REQUEST['SUB_SOURCE'])) echo 'selected'?>><?=$sub_status['UF_CRM_1505283753']?></option><?
+					}
+					?>
+			</select>
+		</div>
+	</div>
+
+		<div class="col-auto">
+		<div class="field-caption">Ethnicity: </div>
+		<div><select name="Ethnicity[]" >
+				<option value="all" <?if(in_array('all', $_REQUEST['Ethnicity'])) echo 'selected'?>>All</option>
+					<?
+
+					$current_ethn="";
+					$sql = "select distinct UF_CRM_1582016651, b_user_field_enum.VALUE  from b_uts_crm_lead 
+JOIN b_user_field_enum ON b_user_field_enum.ID = b_uts_crm_lead.UF_CRM_1582016651 ORDER BY UF_CRM_1582016651;";
+					$ethn_res = $DB->Query($sql);
+					while($ethnicity = $ethn_res->fetch())
+					{
+						?><option value="<?=$ethnicity['UF_CRM_1582016651']?>" 
+						<?if(in_array($ethnicity['UF_CRM_1582016651'], $_REQUEST['Ethnicity'])){ 
+								echo 'selected';
+								$current_ethn=$ethnicity['VALUE'];
+								}
+							?>>
+							<?=$ethnicity['VALUE']?>
+
+						</option><?
 					}
 					?>
 			</select>
@@ -428,16 +455,24 @@ foreach ($URERS as $user=>$user_name){
 	}
 	//конец фильтра по горячим/холодным лидам**************************************
 
-	//фильтр по подисточнику****************************************************
-
+	//фильтр по подисточнику и национальности******************************
 	$allocated_str="";
 	foreach($allocated as $key=>$all_lead_id) $allocated_str=$allocated_str.$all_lead_id.",";
 	$allocated_str=mb_substr($allocated_str,0, -1);
 
-	if($_REQUEST['SUB_SOURCE'][0]!=all && count($allocated)>0)
+	if(($_REQUEST['SUB_SOURCE'][0]!=all || $_REQUEST['Ethnicity'][0]!=all) && count($allocated)>0)
 	{
+		//только подисточник
+		if($_REQUEST['SUB_SOURCE'][0]!=all && $_REQUEST['Ethnicity'][0]==all)
+			$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead WHERE VALUE_ID IN (".$allocated_str.") and UF_CRM_1505283753='".$_REQUEST['SUB_SOURCE'][0]."'";
+		//только национальность
+		if($_REQUEST['SUB_SOURCE'][0]==all && $_REQUEST['Ethnicity'][0]!=all)
+			$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead WHERE VALUE_ID IN (".$allocated_str.") and UF_CRM_1582016651='".$_REQUEST['Ethnicity'][0]."'";
+		//оба
+		if($_REQUEST['SUB_SOURCE'][0]!=all && $_REQUEST['Ethnicity'][0]!=all)
+			$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead WHERE VALUE_ID IN (".$allocated_str.") and UF_CRM_1505283753='".$_REQUEST['SUB_SOURCE'][0]."' and UF_CRM_1582016651='".$_REQUEST['Ethnicity'][0]."'";
 
-		$sql = "select VALUE_ID, UF_CRM_1505283753 from b_uts_crm_lead WHERE VALUE_ID IN (".$allocated_str.") and UF_CRM_1505283753='".$_REQUEST['SUB_SOURCE'][0]."'";
+
 		//print $sql."<br/>";
 		$filteredLeadsID=array();
 		$filteredLeadsRes = $DB->Query($sql);
@@ -446,21 +481,11 @@ foreach ($URERS as $user=>$user_name){
 				$filteredLeadsID[]=$filteredLead['VALUE_ID'];
 			}
 
-		/*print "<br/>Allocated:<br/>".count($allocated)."<br/>";
-		print_r($allocated);
-
-		print "<br/>Filtered:<br/>".count($filteredLeadsID)."<br/>";
-		print_r($filteredLeadsID);*/
-
 		$allocated=$filteredLeadsID;
-
-		/*print "<br/>Allocated2:<br/>".count($allocated)."<br/>";
-		print_r($allocated);*/
-
 	}
-
-
 	//конец фильтра по подисточнику**********************************************
+
+	//Ethnicity
 
 	$arResult[$user]['Allocated']=$allocated;
 	$arResult[$user]['Name']=$user_name;
@@ -591,6 +616,11 @@ while($ins = $ins_res->fetch())
 		$sours_str=$sours_str." Sub Source: ".$_REQUEST['SUB_SOURCE'][0];
 		$shown_all_leads=false;
 	}
+	if (isset($_REQUEST['Ethnicity'][0]) && $_REQUEST['Ethnicity'][0]!='all'){
+		$sours_str=$sours_str." Ethnicity: ".$current_ethn;
+		$shown_all_leads=false;
+	}
+
 	if ($shown_all_leads){
 		$sours_str=$sours_str." all leads: ";
 	}
